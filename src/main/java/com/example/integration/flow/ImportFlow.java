@@ -18,6 +18,7 @@ import org.springframework.integration.kafka.dsl.Kafka;
 import org.springframework.integration.kafka.inbound.KafkaMessageDrivenChannelAdapter.ListenerMode;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.MessageHeaders;
 
 import java.util.concurrent.Executors;
 
@@ -53,6 +54,7 @@ public class ImportFlow {
     public IntegrationFlow nextChannel() {
         return IntegrationFlows.from("next")
                 .transform(Transformers.fromJson(MyDataObject.class))  // An exception here is sent to errorChannel
+                .enrichHeaders(headers -> headers.header(MessageHeaders.ERROR_CHANNEL, (errorHandler.getInputChannel())))
                 .aggregate(aggregatorSpec ->
                         aggregatorSpec
                                 .releaseStrategy(new MessageCountReleaseStrategy(100))

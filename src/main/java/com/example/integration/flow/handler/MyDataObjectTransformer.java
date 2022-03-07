@@ -15,6 +15,6 @@ public class MyDataObjectTransformer implements GenericTransformer<Message<List<
 
     @Override
     public List<MyDataObject> transform(Message<List<MyDataObject>> source) {
-        throw new MessageTransformationException("test");
+        throw new MessageTransformationException(source, "test");
     }
 }
