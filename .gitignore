@@ -1,0 +1,12 @@
+/.gradle/
+/bin/
+/build/
+/.classpath
+/.project
+/.settings
+*.iml
+.idea
+/test-output/
+/eclipse.sh
+/rebuild.sh
+out/
