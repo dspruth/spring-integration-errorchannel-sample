@@ -1,0 +1,96 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: "java"
+apply plugin: "io.spring.dependency-management"
+apply plugin: "org.springframework.boot"
+apply plugin: "jacoco"
+apply plugin: "maven-publish"
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+group = 'com.example.integration'
+sourceCompatibility = targetCompatibility = '11'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-integration'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
+
+    implementation group: 'org.springframework.integration', name:'spring-integration-kafka'
+    implementation 'org.projectlombok:lombok:1.18.18'
+
+    annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
+    annotationProcessor group: "org.projectlombok", name: "lombok"
+
+    compileOnly group: "org.projectlombok", name: "lombok"
+
+
+    testImplementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+    testImplementation group: 'org.springframework.integration', name: 'spring-integration-test'
+
+    // Downgrade kafka-clients to 2.8.1, as kafka 3.0.0 has an issue when running on windows.
+    // See: https://docs.spring.io/spring-kafka/docs/2.8.1-SNAPSHOT/reference/html/#update-deps
+    // And: https://stackoverflow.com/questions/70292425/embeddedkafka-failing-since-spring-boot-2-6-x-accessdeniedexception-appdat
+    testImplementation ('org.springframework.kafka:spring-kafka-test') {
+        // needed if downgrading to Apache Kafka 2.8.1
+        exclude group: 'org.apache.zookeeper', module: 'zookeeper'
+    }
+    testImplementation "org.apache.kafka:kafka-clients:2.8.1:test"
+    testImplementation "org.apache.kafka:kafka_2.13:2.8.1:test"
+}
+
+compileJava {
+    options.warnings = true
+    options.deprecation = true
+    options.compilerArgs += ["-Xlint:unchecked"]
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+bootJar {
+    dependsOn test
+
+    from('src/main/resources') {
+        include '*.json'
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact bootJar
+        }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
